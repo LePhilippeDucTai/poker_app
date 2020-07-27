@@ -24,11 +24,10 @@ class Deck:
 
 
 class Card:
-    dict_corr = {11 : 'J', 12 : 'Q', 13 : 'K', 1 :'A', 14 : 'A'}
-    def __init__(self, value : int, symbol : str):
-        self.value = value
-        self.symbol = symbol
-    # Consider that J = 11, Q = 12, K = 13, A = {1 ou 14}
+    dict_corr = {11 : 'J', 12 : 'Q', 13 : 'K', 14 : 'A'}
+    def __init__(self, *tuple):
+        self.value = tuple[0]
+        self.symbol = tuple[1]
 
     def __repr__(self):
         return f'{self.dict_corr.get(self.value, self.value)}{self.symbol}'
@@ -40,7 +39,20 @@ class Card:
 # Implements all the logic in poker combinations
 class PokerHandCalculator:
     def __init__(self):
-        pass
+        straight_flush_royale_combs = [set(((14,c),(13, c), (12, c), (11, c))) for c in 'schd']
+        straight_flush_combs = [set((x, c) for x in range(i, i+5)) for i in range(2, 14) for c in 'schd']
+ 
+    def is_straight_flush_royale(self, seven_card):
+        for comb in self.is_straight_flush_royale_combs:
+            if comb.issubset(seven_card):
+                return True
+        return False
+
+    def is_straight_flush(self, seven_cards):
+        for comb in self.is_straight_flush_combs:
+            if comb.issubset(seven_card):
+                return True
+        return False
 
     @staticmethod
     def is_flush(seven_cards):
@@ -92,10 +104,11 @@ class PokerPlayer:
 
 
 class PokerGame:
-    def __init__(self, n_players):
+    def __init__(self, n_other_players):
         self.deck = Deck()
         self.deck.shuffle()
-        self.players = [PokerPlayer(self.deck.draw(), self.deck.draw()) for _ in range(n_players)]
+        self.me = PokerPlayer(self.deck.draw(), self.deck.draw())
+        self.players = [self.me] + [PokerPlayer(self.deck.draw(), self.deck.draw()) for _ in range(n_other_players)]
         self.board = [self.deck.draw() for _ in range(5)]
 
     def __repr__(self):
@@ -118,10 +131,13 @@ if __name__ == "__main__":
     counts_values = [sorted(list(collections.Counter([card.value for card in hand]).values()), reverse = True) for hand in hands] 
     counts_suits = [sorted(list(collections.Counter([card.symbol for card in hand]).values()), reverse = True) for hand in hands] 
     
+    
+
+
     # print(counts_values)
     # print(counts_suits)
     # print(counts)
 
-    peval = PokerHandCalculator()
-    x = list(map(peval.is_straight, hands))
-    print(x)
+    # peval = PokerHandCalculator()
+    # x = list(map(peval.is_straight, hands))
+    # print(x)
