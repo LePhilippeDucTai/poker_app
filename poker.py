@@ -56,16 +56,21 @@ class PokerHandCalculator:
         self.seven_cards = seven_cards
         self.count_values = None
         self.count_suits = None
+        self.most_frequent_suit = None
 
+    def count_tuples(self, suit_for_flush=None):
+        if suit_for_flush:
+            self.seven_cards = [
+                card for card in self.seven_cards if card[1] == suit_for_flush
+            ]
         tuples_counter = collections.Counter(
             [value for value, _ in self.seven_cards]
         ).items()
         tuples_sorted_keys = sorted(
             tuples_counter, key=lambda item: item[0], reverse=True
         )
-        self.tuple_cards = sorted(
-            tuples_sorted_keys, key=lambda item: item[1], reverse=True
-        )
+        tuple_cards = sorted(tuples_sorted_keys, key=lambda item: item[1], reverse=True)
+        return tuple_cards
 
     def is_straight_flush_royale(self):
         for comb in self.straight_flush_royale_combs:
@@ -97,12 +102,15 @@ class PokerHandCalculator:
 
     # Must treat this
     def is_flush(self):
-        counts_suits = list(
-            collections.Counter([suit for _, suit in self.seven_cards]).values()
-        )
-        return (
-            max(counts_suits) >= 5
-        )  # if more or 5 cards of the same symbol then it is a flush
+        counter_suits = collections.Counter([suit for _, suit in self.seven_cards])
+        counts_values = list(counter_suits.values())
+
+        # if more or 5 cards of the same symbol then it is a flush
+        if max(counts_values) >= 5:
+            self.most_frequent_suit = counter_suits.most_common(1)[0][0]
+            return True
+        else:
+            return False
 
     def is_straight(self):
         set_values = set(x for x, _ in self.seven_cards)
@@ -156,7 +164,8 @@ class PokerHandCalculator:
         else:
             comb, rank = ("High Card", 0)
 
-        return (comb, rank + self.compute_score(self.tuple_cards))
+        tuple_cards = self.count_tuples(suit_for_flush=self.most_frequent_suit)
+        return (comb, rank + self.compute_score(tuple_cards))
 
 
 # A poker Player has two cards only
@@ -204,15 +213,7 @@ if __name__ == "__main__":
     pokergame = PokerGame(n_players)
     hands = pokergame.hands_combinations()
     eval = [PokerHandCalculator(hand).evaluate_hand() for hand in hands]
-    hands_str = "\n".join(map(str, zip(eval, pokergame.players)))
+    hands_str = "\n".join(
+        map(str, sorted(zip(eval, pokergame.players), key=lambda t: t[0][1]))
+    )
     print(hands_str)
-
-    # counts_values = [sorted(list(collections.Counter([card.value for card in hand]).values()), reverse = True) for hand in hands]
-    # counts_suits = [sorted(list(collections.Counter([card.symbol for card in hand]).values()), reverse = True) for hand in hands]
-
-    # hand = (Qc, 2d)[9s, Kc, 9c, Ac, Jc])
-
-    # hand = [Card(14,'c'), Card(13, 'c'), Card(2, 'c'), Card(3, 'c'), Card(7,'d'), Card(10,'c'), Card(7,'s')]
-    # hand = [Card(14,'c'), Card(13, 'd'), Card(2, 'd'), Card(3, 'c'), Card(7,'d'), Card(10,'d'), Card(7,'d')]
-    # test = hand_evaluator.is_flush(hand)
-    # print(test)
