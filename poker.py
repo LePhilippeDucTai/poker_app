@@ -39,19 +39,19 @@ class Card:
         return self.value == other.value and self.symbol == other.symbol
 
 
+STRAIGHT_FLUSH_ROYALE_COMBS = [
+    set(((14, c), (13, c), (12, c), (11, c), (10, c))) for c in "schd"
+]
+STRAIGHT_FLUSH_COMBS = [
+    set((x, c) for x in range(i, i + 5)) for i in range(2, 11) for c in "schd"
+] + [set((x, c) for x in (14, 2, 3, 4, 5)) for c in "schd"]
+STRAIGHT_COMBS = [{14, 2, 3, 4, 5}] + [
+    set(x for x in range(i, i + 5)) for i in range(2, 11)
+]
+
 # A hand is constituted with 7 cards but only the best 5 are taken into account
 # Implements all the logic in poker combinations
 class PokerHandCalculator:
-    straight_flush_royale_combs = [
-        set(((14, c), (13, c), (12, c), (11, c), (10, c))) for c in "schd"
-    ]
-    straight_flush_combs = [
-        set((x, c) for x in range(i, i + 5)) for i in range(2, 11) for c in "schd"
-    ] + [set((x, c) for x in (14, 2, 3, 4, 5)) for c in "schd"]
-    straight_combs = [{14, 2, 3, 4, 5}] + [
-        set(x for x in range(i, i + 5)) for i in range(2, 11)
-    ]
-
     def __init__(self, seven_cards):
         self.seven_cards = seven_cards
         self.count_values = None
@@ -73,13 +73,13 @@ class PokerHandCalculator:
         return tuple_cards
 
     def is_straight_flush_royale(self):
-        for comb in self.straight_flush_royale_combs:
+        for comb in STRAIGHT_FLUSH_ROYALE_COMBS:
             if comb.issubset(self.seven_cards):
                 return True
         return False
 
     def is_straight_flush(self):
-        for comb in self.straight_flush_combs:
+        for comb in STRAIGHT_FLUSH_COMBS:
             if comb.issubset(self.seven_cards):
                 return True
         return False
@@ -114,7 +114,7 @@ class PokerHandCalculator:
 
     def is_straight(self):
         set_values = set(x for x, _ in self.seven_cards)
-        for comb in self.straight_combs:
+        for comb in STRAIGHT_COMBS:
             if comb.issubset(set_values):
                 return True
         return False
@@ -185,21 +185,35 @@ class PokerPlayer:
 
 
 class PokerGame:
-    def __init__(self, n_other_players):
+    def __init__(self, n_other_players, fixed_board=None, me=None):
+        self.n_other_players = n_other_players
+        self.fixed_board = fixed_board
+        self.me = me
         self.deck = Deck()
         self.deck.shuffle()
-        self.me = PokerPlayer(self.deck.draw(), self.deck.draw())
+        if self.me:
+            self.deck.draw_cards(self.me.hand)
+        else:
+            self.me = PokerPlayer(self.deck.draw(), self.deck.draw())
+
+        if self.fixed_board:
+            self.deck.draw_cards(self.fixed_board)
+            self.board = self.fixed_board + [
+                self.deck.draw() for _ in range(5 - len(self.fixed_board))
+            ]
+        else:
+            self.board = [self.deck.draw() for _ in range(5)]
+
         self.players = [self.me] + [
             PokerPlayer(self.deck.draw(), self.deck.draw())
-            for _ in range(n_other_players)
+            for _ in range(self.n_other_players)
         ]
-        self.board = [self.deck.draw() for _ in range(5)]
 
     def __repr__(self):
         return "\n".join([str(self.players), str(self.board), str(self.deck)])
 
-    def reinit(self, n_players):
-        self.__init__(n_players)
+    def reinit(self):
+        self.__init__(self.n_other_players, fixed_board=self.fixed_board, me=self.me)
 
     def hands_combinations(self):
         return [player.combination(self.board) for player in self.players]
@@ -208,9 +222,27 @@ class PokerGame:
         print([str(player) for player in self.players])
 
 
+class MonteCarloPokerGame:
+    def __init__(self, n_simulations) -> None:
+        self.n_simulations = n_simulations
+        self.n_wins = 0
+
+
 if __name__ == "__main__":
     n_players = 10
-    pokergame = PokerGame(n_players)
+    me = PokerPlayer(Card(14, "s"), Card(14, "d"))
+    board = None
+    board = [Card(5, "s"), Card(11, "h"), Card(13, "s")]
+
+    pokergame = PokerGame(n_players, me=me, fixed_board=board)
+    hands = pokergame.hands_combinations()
+    eval = [PokerHandCalculator(hand).evaluate_hand() for hand in hands]
+    hands_str = "\n".join(
+        map(str, sorted(zip(eval, pokergame.players), key=lambda t: t[0][1]))
+    )
+    print(hands_str)
+
+    pokergame.reinit()
     hands = pokergame.hands_combinations()
     eval = [PokerHandCalculator(hand).evaluate_hand() for hand in hands]
     hands_str = "\n".join(
