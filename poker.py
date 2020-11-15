@@ -173,7 +173,7 @@ class PokerHandCalculator:
 class PokerPlayer:
     def __init__(self, *hand):
         self.hand = hand
-        self.str_game = None
+        self.str_game = str(self.hand)
 
     def __repr__(self):
         return str(self.str_game)
@@ -182,6 +182,11 @@ class PokerPlayer:
         strboard = "\033[32m" + str(board)
         self.str_game = str(self.hand) + strboard + "\033[m"
         return [(card.value, card.symbol) for card in it.chain(self.hand, board)]
+
+    def my_rank(self, board):
+        comb = self.combination(board)
+        res = PokerHandCalculator(comb).evaluate_hand()
+        return res[1]
 
 
 class PokerGame:
@@ -220,32 +225,3 @@ class PokerGame:
 
     def hands_print(self):
         print([str(player) for player in self.players])
-
-
-class MonteCarloPokerGame:
-    def __init__(self, n_simulations) -> None:
-        self.n_simulations = n_simulations
-        self.n_wins = 0
-
-
-if __name__ == "__main__":
-    n_players = 10
-    me = PokerPlayer(Card(14, "s"), Card(14, "d"))
-    board = None
-    board = [Card(5, "s"), Card(11, "h"), Card(13, "s")]
-
-    pokergame = PokerGame(n_players, me=me, fixed_board=board)
-    hands = pokergame.hands_combinations()
-    eval = [PokerHandCalculator(hand).evaluate_hand() for hand in hands]
-    hands_str = "\n".join(
-        map(str, sorted(zip(eval, pokergame.players), key=lambda t: t[0][1]))
-    )
-    print(hands_str)
-
-    pokergame.reinit()
-    hands = pokergame.hands_combinations()
-    eval = [PokerHandCalculator(hand).evaluate_hand() for hand in hands]
-    hands_str = "\n".join(
-        map(str, sorted(zip(eval, pokergame.players), key=lambda t: t[0][1]))
-    )
-    print(hands_str)
