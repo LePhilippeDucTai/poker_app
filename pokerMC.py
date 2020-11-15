@@ -32,11 +32,11 @@ class PokerHandSimulator:
 
 
 if __name__ == "__main__":
-    n_other_players = 6
-    me = PokerPlayer(Card(9, "c"), Card(9, "d"))
-    board = [Card(11, "d"), Card(12, "s"), Card(4, "s")]
-    # board = None
+    n_other_players = 7
+    board = None
+    me = PokerPlayer(Card(14, "c"), Card(13, "d"))
+    # board = [Card(11, "d"), Card(12, "s"), Card(4, "s")]
     hands_simulator = PokerHandSimulator(me, n_other_players, board=board)
     MCE = MonteCarloEngine()
-    results = MCE.compute(hands_simulator, 50000, parallel=True)
+    results = MCE.compute(hands_simulator, 10000, parallel=True)
     print(np.mean(results))

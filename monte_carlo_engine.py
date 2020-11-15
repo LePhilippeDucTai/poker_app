@@ -11,7 +11,7 @@ class MonteCarloEngine:
         if parallel:
             print(f"Monte-Carlo computing with {self.npools} processors.")
             x = self.pool.imap_unordered(
-                obj.simulate, range(n_simulations), chunksize=100
+                obj.simulate, range(n_simulations), chunksize=500
             )
         else:
             print(f"Monte-Carlo computing with 1 processor.")
