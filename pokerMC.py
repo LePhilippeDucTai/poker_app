@@ -1,9 +1,6 @@
-from monte_carlo_engine import MonteCarloEngine
 from poker import PokerPlayer, Deck, Card
-import numpy as np
 
-
-class PokerHandSimulator:
+class from poker import PokerPlayer, Deck, Card:
     def __init__(self, me, n_players, board=None) -> None:
         self.n_players = n_players
         self.me = me
@@ -29,14 +26,3 @@ class PokerHandSimulator:
             [player.my_rank(new_board) for player in other_players]
         )
         return (my_rank >= maximum_other_ranks) * 1
-
-
-if __name__ == "__main__":
-    n_other_players = 7
-    board = None
-    me = PokerPlayer(Card(14, "c"), Card(13, "d"))
-    # board = [Card(11, "d"), Card(12, "s"), Card(4, "s")]
-    hands_simulator = PokerHandSimulator(me, n_other_players, board=board)
-    MCE = MonteCarloEngine()
-    results = MCE.compute(hands_simulator, 10000, parallel=True)
-    print(np.mean(results))
